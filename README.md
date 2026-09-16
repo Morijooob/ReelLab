@@ -31,6 +31,10 @@ This MVP does not claim to predict virality or guarantee performance. Recommenda
 
 Open `index.html` in a modern browser. No build step is required.
 
+## CI/CD
+
+Every push to `main` runs the smoke test and the GitHub Pages deployment workflow. The smoke test validates required files, JavaScript syntax, and core HTML/CSS markers.
+
 ## Roadmap
 
 1. More browser-side signal extraction.
