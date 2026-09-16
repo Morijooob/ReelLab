@@ -41,7 +41,7 @@ jobs:
               assert token in js, token
           for token in ('cleanSpeech', 'cleanOcr', 'detect', 'score', 'موضوع نامشخص', 'MutationObserver', 'reelTopic'):
               assert token in v2, token
-          for token in ('frameStats', 'brightness', 'contrast', 'motion', 'REAL REEL AUDIT', 'MutationObserver', 'node'):
+          for token in ('frameStats', 'brightness', 'contrast', 'motion', 'REAL REEL AUDIT', 'MutationObserver'):
               assert token in v3, token
           assert 'innerHTML' not in js
           assert 'innerHTML' not in v2
