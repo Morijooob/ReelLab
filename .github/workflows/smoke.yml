@@ -13,27 +13,36 @@ jobs:
           test -s index.html
           test -s style.css
           test -s app.js
+          test -s engine-v2.js
           test -s manifest.webmanifest
           test -s icon.svg
           test -s 404.html
           grep -q 'style.css' index.html
           grep -q 'app.js' index.html
+          grep -q 'engine-v2.js' index.html
           grep -q 'manifest.webmanifest' index.html
       - name: Static syntax, security and intelligence checks
         run: |
           node --check app.js
+          node --check engine-v2.js
           python - <<'PY'
           from pathlib import Path
           html=Path('index.html').read_text(encoding='utf-8')
           js=Path('app.js').read_text(encoding='utf-8')
+          v2=Path('engine-v2.js').read_text(encoding='utf-8')
           manifest=Path('manifest.webmanifest').read_text(encoding='utf-8')
-          for token in ('<!doctype html>', 'lang="fa"', 'dir="rtl"', 'id="analyzeBtn"', 'id="results"', 'id="saveExperimentBtn"', 'id="historyList"', 'id="hookInput"', 'id="captionSuggestion"', 'id="hashtags"', 'id="timingOptions"'):
+          for token in ('<!doctype html>', 'lang="fa"', 'dir="rtl"', 'id="analyzeBtn"', 'id="results"', 'id="saveExperimentBtn"', 'id="historyList"', 'id="hookInput"', 'id="captionSuggestion"', 'id="hashtags"', 'id="timingOptions"', 'id="reelTopic"'):
               assert token in html, token
           for token in ('localStorage', 'textContent', 'STORAGE_KEY', 'MAX_HISTORY', 'navigator.clipboard', 'sampleFrames', 'readOcr', 'visualObjects', 'inferTopic', 'topicTags'):
               assert token in js, token
+          for token in ('cleanSignal', 'cleanOcr', 'distinctHooks', 'captionFor', 'renderTags', 'موضوع نامشخص', 'reelTopic'):
+              assert token in v2, token
           assert 'innerHTML' not in js
           assert 'fetch(' not in js
           assert 'XMLHttpRequest' not in js
+          assert 'innerHTML' not in v2
+          assert 'fetch(' not in v2
+          assert 'XMLHttpRequest' not in v2
           assert 'makeTiming' not in js
           assert '۱۹:۰۰–۲۱:۳۰' not in js
           assert '۱۲:۳۰–۱۴:۰۰' not in js
@@ -41,5 +50,5 @@ jobs:
           assert 'icon.svg' in manifest
           assert 'display' in manifest and 'standalone' in manifest
           assert len(Path('style.css').read_text(encoding='utf-8')) > 1000
-          print('ReelLab content-intelligence hardening smoke test passed')
+          print('ReelLab engine-v2 quality smoke test passed')
           PY
