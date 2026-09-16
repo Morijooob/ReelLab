@@ -1,0 +1,20 @@
+{
+  "name": "ReelLab — Reel Experiment Engine",
+  "short_name": "ReelLab",
+  "lang": "fa",
+  "dir": "rtl",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#090b12",
+  "theme_color": "#090b12",
+  "description": "تحلیل و آزمایش Reels بدون نیاز به API یا آپلود سرور",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
