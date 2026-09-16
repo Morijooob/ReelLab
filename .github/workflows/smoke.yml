@@ -35,12 +35,12 @@ jobs:
               assert token in html, token
           for token in ('localStorage', 'textContent', 'STORAGE_KEY', 'MAX_HISTORY', 'navigator.clipboard', 'sampleFrames', 'readOcr', 'visualObjects', 'inferTopic', 'topicTags'):
               assert token in js, token
-          for token in ('cleanSignal', 'cleanOcr', 'distinctHooks', 'captionFor', 'renderTags', 'موضوع نامشخص', 'reelTopic'):
+          for token in ('cleanSpeech', 'cleanOcr', 'detect', 'score', 'موضوع نامشخص', 'MutationObserver', 'reelTopic'):
               assert token in v2, token
           assert 'innerHTML' not in js
+          assert 'innerHTML' not in v2
           assert 'fetch(' not in js
           assert 'XMLHttpRequest' not in js
-          assert v2.count('innerHTML') == 1 and 'label.innerHTML=' in v2
           assert 'fetch(' not in v2
           assert 'XMLHttpRequest' not in v2
           assert 'makeTiming' not in js
@@ -50,5 +50,5 @@ jobs:
           assert 'icon.svg' in manifest
           assert 'display' in manifest and 'standalone' in manifest
           assert len(Path('style.css').read_text(encoding='utf-8')) > 1000
-          print('ReelLab engine-v2 quality smoke test passed')
+          print('ReelLab hardened intelligence smoke test passed')
           PY
