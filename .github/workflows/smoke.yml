@@ -21,8 +21,11 @@ jobs:
           python - <<'PY'
           from pathlib import Path
           html=Path('index.html').read_text(encoding='utf-8')
-          for token in ('<!doctype html>', 'lang="fa"', 'dir="rtl"', 'id="analyzeBtn"', 'id="results"'):
+          for token in ('<!doctype html>', 'lang="fa"', 'dir="rtl"', 'id="analyzeBtn"', 'id="results"', 'id="saveExperimentBtn"', 'id="historyList"'):
               assert token in html, token
+          js=Path('app.js').read_text(encoding='utf-8')
+          for token in ('localStorage', 'textContent', 'STORAGE_KEY', 'MAX_HISTORY'):
+              assert token in js, token
           css=Path('style.css').read_text(encoding='utf-8')
           assert len(css) > 1000
           print('ReelLab smoke test passed')
