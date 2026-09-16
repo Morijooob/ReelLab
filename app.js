@@ -2,184 +2,45 @@
   'use strict';
   const $ = (id) => document.getElementById(id);
   const tabs = [...document.querySelectorAll('.tab')];
-  const uploadPanel = $('uploadPanel');
-  const urlPanel = $('urlPanel');
-  const videoInput = $('videoInput');
-  const fileName = $('fileName');
-  const urlInput = $('urlInput');
-  const goal = $('goal');
-  const experimentName = $('experimentName');
-  const caption = $('caption');
-  const cta = $('cta');
-  const analyzeBtn = $('analyzeBtn');
-  const status = $('status');
-  const results = $('results');
-  const summary = $('summary');
-  const metrics = $('metrics');
-  const findings = $('findings');
-  const experimentText = $('experimentText');
-  const hooks = $('hooks');
-  const resetBtn = $('resetBtn');
-  const saveExperimentBtn = $('saveExperimentBtn');
-  const copyExperimentBtn = $('copyExperimentBtn');
-  const history = $('history');
-  const historyList = $('historyList');
-  const clearHistoryBtn = $('clearHistoryBtn');
-  const STORAGE_KEY = 'reellab.experiments.v1';
-  const MAX_HISTORY = 12;
-  let mode = 'upload';
-  let selectedFile = null;
-  let videoMeta = null;
-  let lastAnalysis = null;
-
+  const uploadPanel = $('uploadPanel'), urlPanel = $('urlPanel');
+  const videoInput = $('videoInput'), fileName = $('fileName'), urlInput = $('urlInput');
+  const goal = $('goal'), experimentName = $('experimentName'), hookInput = $('hookInput'), caption = $('caption'), cta = $('cta');
+  const analyzeBtn = $('analyzeBtn'), status = $('status'), results = $('results'), summary = $('summary'), metrics = $('metrics'), findings = $('findings');
+  const hooks = $('hooks'), captionSuggestion = $('captionSuggestion'), captionReason = $('captionReason'), hashtags = $('hashtags');
+  const ctaSuggestion = $('ctaSuggestion'), timingText = $('timingText'), timingOptions = $('timingOptions'), experimentText = $('experimentText');
+  const resetBtn = $('resetBtn'), saveExperimentBtn = $('saveExperimentBtn'), copyExperimentBtn = $('copyExperimentBtn');
+  const copyCaptionBtn = $('copyCaptionBtn'), copyHashtagsBtn = $('copyHashtagsBtn'), copyCtaBtn = $('copyCtaBtn'), instagramBtn = $('instagramBtn');
+  const history = $('history'), historyList = $('historyList'), clearHistoryBtn = $('clearHistoryBtn');
+  const STORAGE_KEY = 'reellab.experiments.v2', MAX_HISTORY = 12;
+  let mode = 'upload', selectedFile = null, videoMeta = null, lastAnalysis = null;
   const goalNames = { reach: 'دیده‌شدن', followers: 'فالوور', engagement: 'تعامل', sales: 'فروش' };
   const setStatus = (text, tone = '') => { status.textContent = text; status.dataset.tone = tone; };
-  const isInstagramReel = (value) => {
-    try {
-      const u = new URL(value);
-      return /(^|\.)instagram\.com$/i.test(u.hostname) && (/\/reel\//i.test(u.pathname) || /\/reels\//i.test(u.pathname));
-    } catch { return false; }
-  };
-  const addFinding = (title, text, kind = 'warn') => {
-    const box = document.createElement('article');
-    box.className = `finding ${kind}`;
-    const b = document.createElement('b'); b.textContent = title;
-    const p = document.createElement('p'); p.textContent = text;
-    box.append(b, p); findings.appendChild(box);
-  };
-  const addMetric = (label, value) => {
-    const box = document.createElement('div'); box.className = 'metric';
-    const b = document.createElement('b'); b.textContent = value;
-    const s = document.createElement('span'); s.textContent = label;
-    box.append(b, s); metrics.appendChild(box);
-  };
-  const addHook = (label, text) => {
-    const box = document.createElement('div'); box.className = 'hook';
-    const small = document.createElement('small'); small.textContent = label;
-    const span = document.createElement('span'); span.textContent = text;
-    box.append(small, span); hooks.appendChild(box);
-  };
-  const formatDuration = (seconds) => {
-    if (!Number.isFinite(seconds)) return '—';
-    const s = Math.round(seconds); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
-  };
-  const getVideoMeta = (file) => new Promise((resolve, reject) => {
-    const url = URL.createObjectURL(file);
-    const video = document.createElement('video');
-    video.preload = 'metadata';
-    video.onloadedmetadata = () => { const m = { duration: video.duration, width: video.videoWidth, height: video.videoHeight }; URL.revokeObjectURL(url); resolve(m); };
-    video.onerror = () => { URL.revokeObjectURL(url); reject(new Error('VIDEO_METADATA')); };
-    video.src = url;
-  });
-  const readHistory = () => {
-    try {
-      const data = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-      return Array.isArray(data) ? data.slice(0, MAX_HISTORY) : [];
-    } catch { return []; }
-  };
-  const writeHistory = (items) => {
-    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(items.slice(0, MAX_HISTORY))); return true; }
-    catch { setStatus('ذخیره محلی ممکن نشد؛ فضای مرورگر را بررسی کن.', 'error'); return false; }
-  };
-  const renderHistory = () => {
-    const items = readHistory();
-    history.hidden = items.length === 0;
-    historyList.textContent = '';
-    items.forEach((item) => {
-      const card = document.createElement('article'); card.className = 'history-card';
-      const head = document.createElement('div'); head.className = 'history-head';
-      const title = document.createElement('strong'); title.textContent = item.name || 'آزمایش بدون نام';
-      const date = document.createElement('small'); date.textContent = new Date(item.createdAt).toLocaleString('fa-IR');
-      head.append(title, date); card.append(head);
-      const meta = document.createElement('p'); meta.className = 'history-meta'; meta.textContent = `${goalNames[item.goal] || item.goal} • ${item.duration ? formatDuration(item.duration) : 'بدون ویدیو'} • کپشن ${item.captionLength} کاراکتر • CTA ${item.hasCta ? 'دارد' : 'ندارد'}`; card.append(meta);
-      const plan = document.createElement('p'); plan.className = 'history-plan'; plan.textContent = item.experiment; card.append(plan);
-      const outcomeLabel = document.createElement('label'); outcomeLabel.className = 'field';
-      const outcomeSpan = document.createElement('span'); outcomeSpan.textContent = 'نتیجه بعد از انتشار';
-      const outcome = document.createElement('input'); outcome.type = 'text'; outcome.maxLength = 220; outcome.placeholder = 'مثلاً: 12K بازدید، 340 لایک، 18 فالو'; outcome.value = item.outcome || '';
-      outcome.addEventListener('change', () => { const all = readHistory(); const found = all.find((x) => x.id === item.id); if (found) { found.outcome = outcome.value.trim(); writeHistory(all); } });
-      outcomeLabel.append(outcomeSpan, outcome); card.append(outcomeLabel);
-      const noteLabel = document.createElement('label'); noteLabel.className = 'field';
-      const noteSpan = document.createElement('span'); noteSpan.textContent = 'یادداشت یادگیری';
-      const note = document.createElement('textarea'); note.rows = 2; note.maxLength = 400; note.placeholder = 'چه چیزی از این آزمایش یاد گرفتی؟'; note.value = item.note || '';
-      note.addEventListener('change', () => { const all = readHistory(); const found = all.find((x) => x.id === item.id); if (found) { found.note = note.value.trim(); writeHistory(all); } });
-      noteLabel.append(noteSpan, note); card.append(noteLabel);
-      const remove = document.createElement('button'); remove.className = 'ghost danger'; remove.type = 'button'; remove.textContent = 'حذف این آزمایش';
-      remove.addEventListener('click', () => { writeHistory(readHistory().filter((x) => x.id !== item.id)); renderHistory(); });
-      card.append(remove); historyList.appendChild(card);
-    });
-  };
-  const buildExperimentText = () => `آزمایش: ${experimentName.value.trim() || 'بدون نام'}\nهدف: ${goalNames[goal.value]}\n${experimentText.textContent}\nهوک‌ها: ${[...hooks.querySelectorAll('.hook span')].map((x) => x.textContent).join(' | ')}`;
-  const copyText = async (text) => {
-    try { await navigator.clipboard.writeText(text); return true; }
-    catch {
-      const area = document.createElement('textarea'); area.value = text; area.style.position = 'fixed'; area.style.opacity = '0'; document.body.appendChild(area); area.select(); let ok = false; try { ok = document.execCommand('copy'); } catch {} area.remove(); return ok;
-    }
-  };
-
-  tabs.forEach((tab) => tab.addEventListener('click', () => {
-    mode = tab.dataset.mode;
-    tabs.forEach((t) => { const active = t === tab; t.classList.toggle('active', active); t.setAttribute('aria-selected', String(active)); });
-    uploadPanel.hidden = mode !== 'upload'; urlPanel.hidden = mode !== 'url'; setStatus('');
-  }));
-
-  videoInput.addEventListener('change', async () => {
-    selectedFile = videoInput.files?.[0] || null; videoMeta = null;
-    if (!selectedFile) { fileName.textContent = 'ویدیو روی سرور آپلود نمی‌شود؛ تحلیل در مرورگر انجام می‌شود.'; return; }
-    fileName.textContent = selectedFile.name;
-    if (!selectedFile.type.startsWith('video/')) { selectedFile = null; videoInput.value = ''; setStatus('فایل انتخاب‌شده ویدیو نیست.', 'error'); return; }
-    try { videoMeta = await getVideoMeta(selectedFile); setStatus(`ویدیو آماده است • ${formatDuration(videoMeta.duration)} • ${videoMeta.width}×${videoMeta.height}`, 'ok'); }
-    catch { setStatus('خواندن مشخصات ویدیو ممکن نشد؛ یک فایل ویدیویی دیگر امتحان کن.', 'error'); }
-  });
-
-  analyzeBtn.addEventListener('click', async () => {
-    setStatus('در حال تحلیل…'); results.hidden = true; summary.textContent = ''; metrics.textContent = ''; findings.textContent = ''; hooks.textContent = '';
-    const cap = caption.value.trim(); const action = cta.value.trim(); const selectedGoal = goal.value;
-    if (mode === 'url') {
-      const url = urlInput.value.trim();
-      if (!url) { setStatus('لینک Reel را وارد کن.', 'error'); return; }
-      if (!isInstagramReel(url)) { setStatus('این لینک شبیه لینک معتبر Instagram Reel نیست.', 'error'); return; }
-    }
-    if (mode === 'upload' && selectedFile && !videoMeta) {
-      try { videoMeta = await getVideoMeta(selectedFile); } catch { setStatus('ویدیو قابل تحلیل نیست.', 'error'); return; }
-    }
-    const duration = videoMeta?.duration ?? null;
-    const width = videoMeta?.width ?? null; const height = videoMeta?.height ?? null;
-    const vertical = width && height ? (height / width >= 1.45) : null;
-    const capLen = cap.length;
-    let summaryTitle = 'گلوگاه‌های قابل‌تست پیدا شد';
-    let summaryText = `هدف این Reel: ${goalNames[selectedGoal]}. نتیجه بر اساس داده‌های واردشده در همین مرورگر است.`;
-    if (!videoMeta) { summaryTitle = 'تحلیل اولیه، بدون فایل ویدیو'; summaryText = 'بدون خود ویدیو، فقط ورودی‌های متنی بررسی می‌شوند. برای تشخیص قاب و طول، فایل را هم اضافه کن.'; }
-    const sm = document.createElement('strong'); sm.textContent = summaryTitle;
-    const sp = document.createElement('p'); sp.textContent = summaryText; summary.append(sm, sp);
-    addMetric('مدت ویدیو', duration == null ? '—' : formatDuration(duration)); addMetric('قاب', vertical === null ? '—' : (vertical ? 'عمودی' : `${width}×${height}`)); addMetric('کپشن', `${capLen} کاراکتر`); addMetric('CTA', action ? 'دارد' : 'ندارد');
-    if (!videoMeta) addFinding('ویدیو اضافه نشده', 'برای تحلیل واقعی طول و قاب، ویدیو را آپلود کن. در حالت لینک، Reel مستقیماً از Instagram دریافت نمی‌شود.', 'warn');
-    if (duration !== null) { if (duration < 5) addFinding('ریسک طول خیلی کوتاه', 'نسخه‌ای حدود 7 تا 12 ثانیه را هم تست کن، اگر پیام محتوا اجازه می‌دهد.', 'warn'); else if (duration > 45) addFinding('ریسک طول بالا', 'یک نسخه کوتاه‌تر از همان ایده بساز تا مشخص شود افت توجه از طول ویدیو می‌آید یا نه.', 'warn'); else addFinding('طول در محدوده قابل‌تست', 'طول به‌تنهایی هشدار جدی ایجاد نمی‌کند؛ آزمایش را روی شروع و پیام اصلی متمرکز کن.', 'good'); }
-    if (vertical === false) addFinding('قاب غیربهینه برای Reel', 'نسخه 9:16 را تست کن تا محتوای اصلی فضای عمودی بیشتری بگیرد.', 'warn');
-    if (!cap) addFinding('کپشن خالی است', 'یک کپشن کوتاه و مشخص اضافه کن و نتیجه را با نسخه بدون کپشن مقایسه کن.', 'warn'); else if (capLen < 20) addFinding('کپشن بسیار کوتاه است', 'یک توضیح یا زمینه کوتاه اضافه کن که ارزش محتوا را روشن کند؛ سپس با نسخه فعلی مقایسه کن.', 'warn'); else addFinding('کپشن قابل استفاده است', 'در آزمایش بعدی فقط یک متغیر کپشن را تغییر بده تا اثر آن قابل‌تشخیص بماند.', 'good');
-    if (!action) addFinding('CTA مشخص نیست', 'اگر هدف تعامل، فالوور یا فروش است، یک دعوت به اقدام مشخص و متناسب با همان هدف تست کن.', 'warn'); else addFinding('CTA ثبت شده', `CTA فعلی «${action}» است؛ آن را ثابت نگه دار و بیشتر روی هوک ابتدای ویدیو آزمایش کن.`, 'good');
-    if (mode === 'url') addFinding('محدودیت MVP', 'لینک Instagram فقط اعتبارسنجی می‌شود؛ Reel از Instagram دانلود یا در سرور پردازش نمی‌شود.', 'good');
-    let experiment = 'نسخه B را بساز و فقط هوک 1 تا 2 ثانیه اول را تغییر بده؛ طول، موضوع و CTA را ثابت نگه دار.';
-    if (selectedGoal === 'followers') experiment = 'دو هوک با وعده متفاوت تست کن؛ CTA فالو را ثابت نگه دار تا اثر هوک جداگانه قابل مشاهده باشد.';
-    if (selectedGoal === 'engagement') experiment = 'هوک را به یک سؤال یا تضاد مشخص تبدیل کن و CTA تعامل را ثابت نگه دار.';
-    if (selectedGoal === 'sales') experiment = 'نسخه‌ای با نمایش سریع‌تر نتیجه/محصول بساز و CTA را ثابت نگه دار تا تغییر اصلی فقط در شروع باشد.';
-    if (duration !== null && duration > 45) experiment = 'یک نسخه کوتاه‌تر بساز و فقط طول را تغییر بده؛ سپس عملکرد دو نسخه را با هدف یکسان مقایسه کن.';
-    experimentText.textContent = experiment;
-    const hookBase = selectedGoal === 'sales' ? ['قبل از خرید این 3 نکته را ببین','اگر این اشتباه را بکنی، هزینه‌اش را می‌دهی','نتیجه را در چند ثانیه ببین'] : selectedGoal === 'followers' ? ['اگر این موضوع برات مهمه، اینو ببین','3 چیزی که کاش زودتر می‌دانستم','این اشتباه باعث می‌شود دیده نشوی'] : selectedGoal === 'engagement' ? ['تو کدام گزینه را انتخاب می‌کنی؟','یک اشتباه رایج که خیلی‌ها انجام می‌دهند','با من موافقی یا نه؟'] : ['قبل از رد کردن، این یک نکته را ببین','اگر فقط 10 ثانیه وقت داری، اینو ببین','این بخش ماجرا را کمتر کسی می‌گوید'];
-    hookBase.forEach((h, i) => addHook(`هوک ${i + 1}`, h));
-    lastAnalysis = { name: experimentName.value.trim(), goal: selectedGoal, duration, captionLength: capLen, hasCta: Boolean(action), experiment, hooks: hookBase, createdAt: new Date().toISOString() };
-    results.hidden = false; results.scrollIntoView({ behavior: 'smooth', block: 'start' }); setStatus('تحلیل کامل شد.', 'ok');
-  });
-
-  saveExperimentBtn.addEventListener('click', () => {
-    if (!lastAnalysis) { setStatus('اول تحلیل را اجرا کن.', 'error'); return; }
-    const items = readHistory();
-    items.unshift({ ...lastAnalysis, id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`, outcome: '', note: '' });
-    if (writeHistory(items)) { renderHistory(); setStatus('آزمایش در همین مرورگر ذخیره شد.', 'ok'); history.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
-  });
-
+  const formatDuration = (seconds) => { if (!Number.isFinite(seconds)) return '—'; const s = Math.round(seconds); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`; };
+  const getVideoMeta = (file) => new Promise((resolve, reject) => { const url = URL.createObjectURL(file), video = document.createElement('video'); video.preload = 'metadata'; video.onloadedmetadata = () => { const m = { duration: video.duration, width: video.videoWidth, height: video.videoHeight }; URL.revokeObjectURL(url); resolve(m); }; video.onerror = () => { URL.revokeObjectURL(url); reject(new Error('VIDEO_METADATA')); }; video.src = url; });
+  const isInstagramReel = (value) => { try { const u = new URL(value); return /(^|\.)instagram\.com$/i.test(u.hostname) && /\/reels?\//i.test(u.pathname); } catch { return false; } };
+  const addFinding = (title, text, kind = 'warn') => { const box = document.createElement('article'); box.className = `finding ${kind}`; const b = document.createElement('b'); b.textContent = title; const p = document.createElement('p'); p.textContent = text; box.append(b, p); findings.appendChild(box); };
+  const addMetric = (label, value) => { const box = document.createElement('div'); box.className = 'metric'; const b = document.createElement('b'); b.textContent = value; const s = document.createElement('span'); s.textContent = label; box.append(b, s); metrics.appendChild(box); };
+  const addHook = (label, text) => { const box = document.createElement('div'); box.className = 'hook'; const small = document.createElement('small'); small.textContent = label; const span = document.createElement('span'); span.textContent = text; box.append(small, span); hooks.appendChild(box); };
+  const addChip = (text) => { const chip = document.createElement('span'); chip.className = 'hashtag'; chip.textContent = text; hashtags.appendChild(chip); };
+  const readHistory = () => { try { const data = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); return Array.isArray(data) ? data.slice(0, MAX_HISTORY) : []; } catch { return []; } };
+  const writeHistory = (items) => { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(items.slice(0, MAX_HISTORY))); return true; } catch { setStatus('ذخیره محلی ممکن نشد؛ فضای مرورگر را بررسی کن.', 'error'); return false; } };
+  const renderHistory = () => { const items = readHistory(); history.hidden = items.length === 0; historyList.textContent = ''; items.forEach((item) => { const card = document.createElement('article'); card.className = 'history-card'; const head = document.createElement('div'); head.className = 'history-head'; const title = document.createElement('strong'); title.textContent = item.name || 'آزمایش بدون نام'; const date = document.createElement('small'); date.textContent = new Date(item.createdAt).toLocaleString('fa-IR'); head.append(title, date); card.append(head); const meta = document.createElement('p'); meta.className = 'history-meta'; meta.textContent = `${goalNames[item.goal] || item.goal} • ${item.duration ? formatDuration(item.duration) : 'بدون ویدیو'} • کپشن ${item.captionLength} کاراکتر • CTA ${item.hasCta ? 'دارد' : 'ندارد'}`; card.append(meta); const plan = document.createElement('p'); plan.className = 'history-plan'; plan.textContent = item.experiment; card.append(plan); const outcomeLabel = document.createElement('label'); outcomeLabel.className = 'field'; const outcomeSpan = document.createElement('span'); outcomeSpan.textContent = 'نتیجه بعد از انتشار'; const outcome = document.createElement('input'); outcome.type = 'text'; outcome.maxLength = 220; outcome.placeholder = 'مثلاً: 12K بازدید، 340 لایک، 18 فالو'; outcome.value = item.outcome || ''; outcome.addEventListener('change', () => { const all = readHistory(); const found = all.find((x) => x.id === item.id); if (found) { found.outcome = outcome.value.trim(); writeHistory(all); } }); outcomeLabel.append(outcomeSpan, outcome); card.append(outcomeLabel); const noteLabel = document.createElement('label'); noteLabel.className = 'field'; const noteSpan = document.createElement('span'); noteSpan.textContent = 'یادداشت یادگیری'; const note = document.createElement('textarea'); note.rows = 2; note.maxLength = 400; note.placeholder = 'چه چیزی از این آزمایش یاد گرفتی؟'; note.value = item.note || ''; note.addEventListener('change', () => { const all = readHistory(); const found = all.find((x) => x.id === item.id); if (found) { found.note = note.value.trim(); writeHistory(all); } }); noteLabel.append(noteSpan, note); card.append(noteLabel); const remove = document.createElement('button'); remove.className = 'ghost danger'; remove.type = 'button'; remove.textContent = 'حذف این آزمایش'; remove.addEventListener('click', () => { writeHistory(readHistory().filter((x) => x.id !== item.id)); renderHistory(); }); card.append(remove); historyList.appendChild(card); }); };
+  const copyText = async (text) => { try { await navigator.clipboard.writeText(text); return true; } catch { const area = document.createElement('textarea'); area.value = text; area.style.position = 'fixed'; area.style.opacity = '0'; document.body.appendChild(area); area.select(); let ok = false; try { ok = document.execCommand('copy'); } catch {} area.remove(); return ok; } };
+  const buildExperimentText = () => `آزمایش: ${experimentName.value.trim() || 'بدون نام'}\nهدف: ${goalNames[goal.value]}\n${experimentText.textContent}\nهوک‌ها: ${[...hooks.querySelectorAll('.hook span')].map((x) => x.textContent).join(' | ')}\nکپشن پیشنهادی: ${captionSuggestion.textContent}\nهشتگ‌ها: ${[...hashtags.querySelectorAll('.hashtag')].map((x) => x.textContent).join(' ')}`;
+  const makeHooks = (selectedGoal) => { if (selectedGoal === 'followers') return ['اگر این نکته را نمی‌دانی، احتمالاً چیزی را از دست می‌دهی','قبل از اینکه ردش کنی، این نکته را ببین','اگر این موضوع برات مهمه، ۱۰ ثانیه وقت بگذار']; if (selectedGoal === 'engagement') return ['تو جای من بودی کدام را انتخاب می‌کردی؟','یک اشتباه رایج که ارزش دارد همین الان ببینی','آخرش را ببین و نظرت را بگو']; if (selectedGoal === 'sales') return ['قبل از خرید این یک نکته را حتماً ببین','اگر قصد خرید داری، این اشتباه را نکن','این تفاوت کوچک می‌تواند انتخابت را عوض کند']; return ['قبل از رد کردن، این یک نکته را ببین','اگر فقط ۱۰ ثانیه وقت داری، اینو ببین','این بخش ماجرا را کمتر کسی می‌گوید']; };
+  const keywordTags = (text) => { const t = text.toLowerCase(); const map = [['خودرو',['#خودرو','#ماشین','#خرید_خودرو']],['غذا',['#غذا','#آشپزی','#آشپزی_آسان']],['ورزش',['#ورزش','#فیتنس','#تمرین']],['موبایل',['#موبایل','#تکنولوژی','#گجت']],['پول',['#کسب_و_کار','#درآمد','#اقتصاد']],['لباس',['#استایل','#مد','#فشن']],['سفر',['#سفر','#گردشگری','#ایرانگردی']],['آموزش',['#آموزش','#یادگیری','#نکته']],['اینستاگرام',['#اینستاگرام','#ریلز','#تولید_محتوا']]]; let tags = []; map.forEach(([key, values]) => { if (t.includes(key)) tags.push(...values); }); if (!tags.length) tags = ['#ریلز','#اینستاگرام','#تولید_محتوا','#محتوای_فارسی','#نکات_کاربردی']; return [...new Set(tags)].slice(0, 8); };
+  const makeCaption = (selectedGoal, cap, hook) => { const opening = hook || (selectedGoal === 'sales' ? 'قبل از خرید، این نکته را ببین 👇' : selectedGoal === 'followers' ? 'اگر این نکته به کارت می‌آید، ذخیره‌اش کن 👇' : 'این نکته کوتاه شاید به کارت بیاید 👇'); const body = cap && cap.length >= 20 ? cap : 'در این Reel یک نکته کوتاه و کاربردی را می‌بینی که می‌توانی همین امروز امتحانش کنی.'; const action = selectedGoal === 'reach' ? 'اگر مفید بود برای یک نفر بفرست.' : selectedGoal === 'followers' ? 'برای نکته‌های بعدی، صفحه را دنبال کن.' : selectedGoal === 'engagement' ? 'نظرت را در کامنت بنویس.' : 'اگر سؤال داری، در کامنت بپرس.'; return `${opening}\n\n${body}\n\n${action}`; };
+  const makeTiming = (selectedGoal) => selectedGoal === 'sales' ? ['۱۲:۰۰–۱۴:۰۰','۱۹:۰۰–۲۱:۳۰'] : selectedGoal === 'engagement' ? ['۱۸:۰۰–۲۰:۰۰','۲۱:۰۰–۲۲:۳۰'] : ['۱۹:۰۰–۲۱:۳۰','۱۲:۳۰–۱۴:۰۰'];
+  tabs.forEach((tab) => tab.addEventListener('click', () => { mode = tab.dataset.mode; tabs.forEach((t) => { const active = t === tab; t.classList.toggle('active', active); t.setAttribute('aria-selected', String(active)); }); uploadPanel.hidden = mode !== 'upload'; urlPanel.hidden = mode !== 'url'; setStatus(''); }));
+  videoInput.addEventListener('change', async () => { selectedFile = videoInput.files?.[0] || null; videoMeta = null; if (!selectedFile) { fileName.textContent = 'ویدیو روی سرور آپلود نمی‌شود؛ تحلیل در مرورگر انجام می‌شود.'; return; } fileName.textContent = selectedFile.name; if (!selectedFile.type.startsWith('video/')) { selectedFile = null; videoInput.value = ''; setStatus('فایل انتخاب‌شده ویدیو نیست.', 'error'); return; } try { videoMeta = await getVideoMeta(selectedFile); setStatus(`ویدیو آماده است • ${formatDuration(videoMeta.duration)} • ${videoMeta.width}×${videoMeta.height}`, 'ok'); } catch { setStatus('خواندن مشخصات ویدیو ممکن نشد؛ یک فایل ویدیویی دیگر امتحان کن.', 'error'); } });
+  analyzeBtn.addEventListener('click', async () => { setStatus('در حال آماده‌سازی چکاپ…'); results.hidden = true; summary.textContent = ''; metrics.textContent = ''; findings.textContent = ''; hooks.textContent = ''; hashtags.textContent = ''; timingOptions.textContent = ''; const cap = caption.value.trim(), action = cta.value.trim(), selectedGoal = goal.value, currentHook = hookInput.value.trim(); if (mode === 'url') { const url = urlInput.value.trim(); if (!url) { setStatus('لینک Reel را وارد کن.', 'error'); return; } if (!isInstagramReel(url)) { setStatus('این لینک شبیه لینک معتبر Instagram Reel نیست.', 'error'); return; } } if (mode === 'upload' && selectedFile && !videoMeta) { try { videoMeta = await getVideoMeta(selectedFile); } catch { setStatus('ویدیو قابل تحلیل نیست.', 'error'); return; } } const duration = videoMeta?.duration ?? null, width = videoMeta?.width ?? null, height = videoMeta?.height ?? null, vertical = width && height ? height / width >= 1.45 : null; const capLen = cap.length, suggestedHooks = makeHooks(selectedGoal), suggestedCaption = makeCaption(selectedGoal, cap, currentHook), suggestedTags = keywordTags(`${cap} ${currentHook}`), suggestedCta = selectedGoal === 'reach' ? 'اگر مفید بود برای یک نفر بفرست.' : selectedGoal === 'followers' ? 'برای نکته‌های بعدی، صفحه را دنبال کن.' : selectedGoal === 'engagement' ? 'نظرت را در کامنت بنویس.' : 'اگر سؤال داری، در کامنت بپرس.', times = makeTiming(selectedGoal); const sm = document.createElement('strong'); sm.textContent = 'گلوگاه‌های قابل‌تست پیدا شد'; const sp = document.createElement('p'); sp.textContent = `هدف این Reel: ${goalNames[selectedGoal]}. این چکاپ برای آماده‌سازی قبل از انتشار است و تضمین ویو نمی‌دهد.`; summary.append(sm, sp); addMetric('مدت ویدیو', duration == null ? '—' : formatDuration(duration)); addMetric('قاب', vertical === null ? '—' : (vertical ? '۹:۱۶' : `${width}×${height}`)); addMetric('کپشن', `${capLen} کاراکتر`); addMetric('CTA', action ? 'دارد' : 'ندارد'); if (!videoMeta) addFinding('ویدیو اضافه نشده', 'برای تحلیل طول و قاب، ویدیو را آپلود کن. در حالت لینک، Reel از Instagram دریافت نمی‌شود.', 'warn'); if (duration !== null) { if (duration < 5) addFinding('طول خیلی کوتاه', 'یک نسخه حدود ۷ تا ۱۲ ثانیه‌ای را هم تست کن، اگر پیام محتوا اجازه می‌دهد.', 'warn'); else if (duration > 45) addFinding('طول بالا', 'یک نسخه کوتاه‌تر از همان ایده بساز و نتیجه را مقایسه کن.', 'warn'); else addFinding('طول قابل‌تست', 'هشدار جدی از خود طول دیده نمی‌شود؛ تمرکز آزمایش را روی شروع و پیام نگه دار.', 'good'); } if (vertical === false) addFinding('قاب غیربهینه برای Reel', 'نسخه ۹:۱۶ را تست کن تا فضای عمودی بیشتری برای محتوای اصلی داشته باشی.', 'warn'); else if (vertical === true) addFinding('قاب مناسب', 'ویدیو عمودی است؛ قاب را ثابت نگه دار و متغیر دیگری را آزمایش کن.', 'good'); if (!currentHook) addFinding('هوک وارد نشده', 'متن یا جمله ۱ تا ۳ ثانیه اول را وارد کن تا نسخه‌های جایگزین را بهتر مقایسه کنی.', 'warn'); else addFinding('هوک ثبت شد', 'هوک را فعلاً ثابت نگه دار و یکی از نسخه‌های پیشنهادی را به‌عنوان نسخه B تست کن.', 'good'); if (!cap) addFinding('کپشن خالی است', 'نسخه پیشنهادی پایین همین صفحه آماده شده؛ آن را بررسی و در Instagram کپی کن.', 'warn'); else if (capLen < 20) addFinding('کپشن کوتاه است', 'زمینه و ارزش Reel را کمی واضح‌تر کن؛ نسخه پیشنهادی را با متن فعلی مقایسه کن.', 'warn'); else addFinding('کپشن قابل استفاده', 'نسخه پیشنهادی را به‌عنوان نسخه B تست کن و بقیه متغیرها را ثابت نگه دار.', 'good'); if (!action) addFinding('CTA مشخص نیست', 'پایین صفحه یک CTA متناسب با هدف ساخته شده؛ در صورت تأیید همان را استفاده کن.', 'warn'); else addFinding('CTA ثبت شد', 'CTA را ثابت نگه دار تا اثر تغییر هوک یا کپشن قابل‌تشخیص باشد.', 'good'); if (mode === 'url') addFinding('محدودیت لینک', 'لینک Instagram فقط اعتبارسنجی می‌شود؛ Reel از Instagram دانلود یا در سرور پردازش نمی‌شود.', 'good'); suggestedHooks.forEach((text, i) => addHook(`هوک ${i + 1}`, text)); captionReason.textContent = cap ? 'این نسخه با حفظ ایده کپشن فعلی، یک شروع روشن و CTA متناسب با هدف اضافه می‌کند.' : 'چون کپشن ندادی، یک کپشن پایه برای تست ساخته شد؛ قبل از انتشار متن را با محتوای واقعی Reel هماهنگ کن.'; captionSuggestion.textContent = suggestedCaption; suggestedTags.forEach(addChip); ctaSuggestion.textContent = suggestedCta; timingText.textContent = 'این‌ها «بازه آزمایشی» هستند، نه ساعت تضمینی برای ویو. بهترین زمان واقعی باید بعداً از نتایج مخاطبان خودت یاد گرفته شود.'; times.forEach((time, i) => { const b = document.createElement('button'); b.className = 'time-chip'; b.type = 'button'; b.textContent = `${i === 0 ? 'بازه ۱' : 'بازه ۲'} • ${time}`; b.addEventListener('click', () => { document.querySelectorAll('.time-chip').forEach((x) => x.classList.remove('selected')); b.classList.add('selected'); }); timingOptions.appendChild(b); }); const experiment = currentHook ? 'نسخه B را با یکی از هوک‌های پیشنهادی شروع کن؛ طول، موضوع، CTA و کپشن را تا حد ممکن ثابت نگه دار.' : 'نسخه B را با یکی از هوک‌های پیشنهادی بساز؛ سپس کپشن پیشنهادی را در برابر کپشن قبلی آزمایش کن.'; experimentText.textContent = experiment; lastAnalysis = { duration, width, height, caption: suggestedCaption, hashtags: suggestedTags.join(' '), cta: suggestedCta, hooks: suggestedHooks, experiment }; results.hidden = false; setStatus('چکاپ کامل شد. موارد قرمز را قبل از انتشار اصلاح کن.', 'ok'); results.scrollIntoView({ behavior: 'smooth', block: 'start' }); });
+  copyCaptionBtn.addEventListener('click', async () => { const ok = await copyText(captionSuggestion.textContent); setStatus(ok ? 'کپشن پیشنهادی کپی شد.' : 'کپی خودکار ممکن نشد؛ متن را دستی انتخاب کن.', ok ? 'ok' : 'error'); });
+  copyHashtagsBtn.addEventListener('click', async () => { const ok = await copyText([...hashtags.querySelectorAll('.hashtag')].map((x) => x.textContent).join(' ')); setStatus(ok ? 'هشتگ‌ها کپی شدند.' : 'کپی خودکار ممکن نشد.', ok ? 'ok' : 'error'); });
+  copyCtaBtn.addEventListener('click', async () => { const ok = await copyText(ctaSuggestion.textContent); setStatus(ok ? 'CTA کپی شد.' : 'کپی خودکار ممکن نشد.', ok ? 'ok' : 'error'); });
   copyExperimentBtn.addEventListener('click', async () => { const ok = await copyText(buildExperimentText()); setStatus(ok ? 'برنامه آزمایش کپی شد.' : 'کپی خودکار ممکن نشد.', ok ? 'ok' : 'error'); });
-  clearHistoryBtn.addEventListener('click', () => { localStorage.removeItem(STORAGE_KEY); renderHistory(); setStatus('تاریخچه پاک شد.', 'ok'); });
-
-  resetBtn.addEventListener('click', () => { videoInput.value = ''; selectedFile = null; videoMeta = null; lastAnalysis = null; fileName.textContent = 'ویدیو روی سرور آپلود نمی‌شود؛ تحلیل در مرورگر انجام می‌شود.'; urlInput.value = ''; experimentName.value = ''; caption.value = ''; cta.value = ''; results.hidden = true; setStatus(''); window.scrollTo({ top: 0, behavior: 'smooth' }); });
+  saveExperimentBtn.addEventListener('click', () => { if (!lastAnalysis) return; const item = { id: Date.now(), createdAt: new Date().toISOString(), name: experimentName.value.trim() || 'آزمایش Reel', goal: goal.value, duration: lastAnalysis.duration, captionLength: lastAnalysis.caption.length, hasCta: Boolean(lastAnalysis.cta), experiment: lastAnalysis.experiment, outcome: '', note: '' }; writeHistory([item, ...readHistory()]); renderHistory(); setStatus('آزمایش ذخیره شد.', 'ok'); });
+  clearHistoryBtn.addEventListener('click', () => { if (confirm('کل تاریخچه آزمایش‌ها پاک شود؟')) { localStorage.removeItem(STORAGE_KEY); renderHistory(); } });
+  resetBtn.addEventListener('click', () => { results.hidden = true; setStatus(''); window.scrollTo({ top: 0, behavior: 'smooth' }); });
+  instagramBtn.addEventListener('click', () => window.open('https://www.instagram.com/', '_blank', 'noopener,noreferrer'));
   renderHistory();
 })();
