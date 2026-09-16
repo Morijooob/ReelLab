@@ -3,33 +3,63 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-  <meta name="description" content="ReelLab — تحلیل و آزمایش Reels بدون نیاز به API یا آپلود سرور">
-  <meta name="theme-color" content="#090b12">
+  <meta name="description" content="ReelLab — قبل از انتشار Reel آن را تست و برای انتشار آماده کن">
+  <meta name="theme-color" content="#f7f8fc">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="icon.svg" type="image/svg+xml">
-  <title>ReelLab — Reel Experiment Engine</title>
+  <title>ReelLab — تست قبل از انتشار</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <main class="shell">
     <header class="topbar"><a class="brand" href="./" aria-label="ReelLab">Reel<span>Lab</span></a><div class="badge">MVP • رایگان</div></header>
-    <section class="hero"><p class="eyebrow">REEL EXPERIMENT ENGINE</p><h1>بفهم چرا Reel شما ضعیف شده؛<br><span>بعد دقیقاً بدان چه چیزی را تست کنی.</span></h1><p class="sub">ReelLab به‌جای یک امتیاز ساختگی، گلوگاه‌های قابل‌تست را پیدا می‌کند و آزمایش بعدی را پیشنهاد می‌دهد.</p></section>
+
+    <section class="hero hero-glow">
+      <div class="hero-glow-orb orb-a"></div><div class="hero-glow-orb orb-b"></div>
+      <p class="eyebrow">REEL PRE-PUBLISH LAB</p>
+      <h1>اینجا تست کن،<br><span>بعد انتشار بده.</span></h1>
+      <p class="sub">قبل از اینکه Reel را در اینستاگرام منتشر کنی، ویدیو، هوک، کپشن، هشتگ، CTA و زمان انتشار را یک‌جا بررسی کن.</p>
+    </section>
+
     <section class="card analyzer" aria-labelledby="analyzer-title">
+      <div class="prepublish-banner"><strong>🚦 چکاپ قبل از انتشار</strong><span>Reel را اول اینجا بررسی کن؛ بعد منتشرش کن.</span></div>
       <div class="tabs" role="tablist"><button class="tab active" data-mode="upload" role="tab" aria-selected="true">آپلود ویدیو</button><button class="tab" data-mode="url" role="tab" aria-selected="false">لینک Reel</button></div>
       <div id="uploadPanel" class="panel active"><label class="dropzone" for="videoInput"><input id="videoInput" type="file" accept="video/*" hidden><span class="upload-icon">↑</span><strong>ویدیوی Reel را انتخاب کن</strong><small id="fileName">ویدیو روی سرور آپلود نمی‌شود؛ تحلیل در مرورگر انجام می‌شود.</small></label></div>
-      <div id="urlPanel" class="panel" hidden><label class="field"><span>لینک Instagram Reel</span><input id="urlInput" type="url" inputmode="url" placeholder="https://www.instagram.com/reel/..." autocomplete="off"></label><p class="hint">در MVP لینک برای شناسایی و گزارش استفاده می‌شود؛ برای تحلیل مطمئن، ویدیو را هم آپلود کن.</p></div>
+      <div id="urlPanel" class="panel" hidden><label class="field"><span>لینک Instagram Reel</span><input id="urlInput" type="url" inputmode="url" placeholder="https://www.instagram.com/reel/..." autocomplete="off"></label><p class="hint">در MVP لینک فقط بررسی می‌شود؛ برای تحلیل ویدیو، فایل را هم اضافه کن.</p></div>
       <div class="grid">
         <label class="field"><span>هدف اصلی</span><select id="goal"><option value="reach">Reach — دیده‌شدن</option><option value="followers">Followers — فالوور</option><option value="engagement">Engagement — تعامل</option><option value="sales">Sales — فروش</option></select></label>
         <label class="field"><span>نام آزمایش</span><input id="experimentName" type="text" maxlength="80" placeholder="مثلاً: تست هوک A/B هفته اول"></label>
         <label class="field"><span>CTA / دعوت به اقدام</span><input id="cta" type="text" maxlength="160" placeholder="مثلاً: ذخیره کن، فالو کن، لینک بیو را ببین"></label>
-        <label class="field wide"><span>متن کپشن</span><textarea id="caption" rows="3" maxlength="2200" placeholder="کپشن Reel را اینجا وارد کن..."></textarea></label>
+        <label class="field wide"><span>هوک فعلی (اختیاری)</span><input id="hookInput" type="text" maxlength="220" placeholder="جمله یا متن ۱ تا ۳ ثانیه اول Reel"></label>
+        <label class="field wide"><span>متن کپشن</span><textarea id="caption" rows="4" maxlength="2200" placeholder="کپشن Reel را اینجا وارد کن..."></textarea></label>
       </div>
-      <button id="analyzeBtn" class="primary" type="button">تحلیل Reel ←</button><p id="status" class="status" role="status" aria-live="polite"></p>
+      <button id="analyzeBtn" class="primary" type="button">🚦 چکاپ قبل از انتشار</button><p id="status" class="status" role="status" aria-live="polite"></p>
     </section>
-    <section id="results" class="results" hidden><div class="section-head"><div><p class="eyebrow">ANALYSIS</p><h2>گزارش Reel</h2></div><button id="resetBtn" class="ghost" type="button">تحلیل جدید</button></div><div id="summary" class="summary"></div><div id="metrics" class="metrics"></div><div id="findings" class="findings"></div><article class="experiment"><div><p class="eyebrow">NEXT EXPERIMENT</p><h3>آزمایش بعدی</h3><p id="experimentText"></p></div><div id="hooks" class="hooks"></div><div class="experiment-actions"><button id="saveExperimentBtn" class="primary small" type="button">ذخیره در آزمایش‌ها</button><button id="copyExperimentBtn" class="ghost" type="button">کپی برنامه آزمایش</button></div></article><p class="disclaimer">این گزارش پیش‌بینی ویروسی‌شدن یا تضمین نتیجه نیست؛ پیشنهادها بر اساس داده‌هایی است که در همین مرورگر وارد یا بررسی شده‌اند.</p></section>
+
+    <section id="results" class="results" hidden>
+      <div class="section-head"><div><p class="eyebrow">PRE-PUBLISH CHECK</p><h2>گزارش آماده‌سازی Reel</h2></div><button id="resetBtn" class="ghost" type="button">تحلیل جدید</button></div>
+      <div id="summary" class="summary"></div>
+      <div id="metrics" class="metrics"></div>
+      <div id="findings" class="findings"></div>
+
+      <article class="tool-card hook-builder"><div><p class="eyebrow">HOOK BUILDER 🎣</p><h3>قلاب اول ویدیو</h3><p>هوک همان شروع ۱ تا ۳ ثانیه‌ای است که باید دلیل ماندن مخاطب را روشن کند.</p></div><div id="hooks" class="hooks"></div></article>
+
+      <article class="tool-card rewrite-card"><div><p class="eyebrow">CAPTION REWRITER 📝</p><h3>کپشن پیشنهادی آماده استفاده</h3><p id="captionReason"></p></div><div id="captionSuggestion" class="copy-box"></div><button id="copyCaptionBtn" class="ghost copy-btn" type="button">📋 کپی کپشن پیشنهادی</button></article>
+
+      <article class="tool-card hashtag-card"><div><p class="eyebrow">HASHTAGS #️⃣</p><h3>هشتگ‌های پیشنهادی</h3><p>هشتگ‌ها برای مرتبط‌بودن پیشنهاد می‌شوند؛ استفاده از همه آن‌ها الزامی نیست.</p></div><div id="hashtags" class="hashtags"></div><button id="copyHashtagsBtn" class="ghost copy-btn" type="button">📋 کپی هشتگ‌ها</button></article>
+
+      <article class="tool-card cta-card"><div><p class="eyebrow">CTA 👉</p><h3>دعوت به اقدام پیشنهادی</h3><p id="ctaSuggestion"></p></div><button id="copyCtaBtn" class="ghost copy-btn" type="button">📋 کپی CTA</button></article>
+
+      <article class="tool-card timing-card"><div><p class="eyebrow">PUBLISH WINDOW ⏰</p><h3>بازه پیشنهادی انتشار</h3><p id="timingText"></p></div><div id="timingOptions" class="timing-options"></div></article>
+
+      <article class="experiment"><div><p class="eyebrow">NEXT EXPERIMENT</p><h3>آزمایش بعدی</h3><p id="experimentText"></p></div><div class="experiment-actions"><button id="saveExperimentBtn" class="primary small" type="button">ذخیره در آزمایش‌ها</button><button id="copyExperimentBtn" class="ghost" type="button">کپی برنامه آزمایش</button></div></article>
+
+      <section class="publish-ready"><div class="ready-icon">✓</div><div><strong>حالا آماده‌ای برای انتشار</strong><p>نسخه پیشنهادی را بررسی کن، موارد قرمز را اصلاح کن و سپس Reel را در Instagram منتشر کن.</p></div><button id="instagramBtn" class="primary small" type="button">باز کردن Instagram ↗</button></section>
+      <p class="disclaimer">این گزارش تضمین ویو یا پیش‌بینی ویروسی‌شدن نیست. زمان انتشار یک بازه آزمایشی است و با داده واقعی مخاطبان می‌تواند دقیق‌تر شود.</p>
+    </section>
+
     <section id="history" class="history" hidden><div class="section-head"><div><p class="eyebrow">EXPERIMENT LOG</p><h2>آزمایش‌های من</h2></div><button id="clearHistoryBtn" class="ghost" type="button">پاک کردن تاریخچه</button></div><p class="history-note">این تاریخچه فقط روی همین مرورگر ذخیره می‌شود؛ ویدیوها ذخیره نمی‌شوند.</p><div id="historyList" class="history-list"></div></section>
     <footer>ReelLab • Analyze → Hypothesis → Experiment → Publish → Measure → Learn</footer>
   </main><script src="app.js" defer></script>
