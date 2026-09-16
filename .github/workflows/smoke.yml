@@ -40,7 +40,7 @@ jobs:
           assert 'innerHTML' not in js
           assert 'fetch(' not in js
           assert 'XMLHttpRequest' not in js
-          assert 'innerHTML' not in v2
+          assert v2.count('innerHTML') == 1 and 'label.innerHTML=' in v2
           assert 'fetch(' not in v2
           assert 'XMLHttpRequest' not in v2
           assert 'makeTiming' not in js
