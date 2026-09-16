@@ -19,7 +19,7 @@ jobs:
           grep -q 'style.css' index.html
           grep -q 'app.js' index.html
           grep -q 'manifest.webmanifest' index.html
-      - name: Static syntax and security checks
+      - name: Static syntax, security and intelligence checks
         run: |
           node --check app.js
           python - <<'PY'
@@ -29,14 +29,17 @@ jobs:
           manifest=Path('manifest.webmanifest').read_text(encoding='utf-8')
           for token in ('<!doctype html>', 'lang="fa"', 'dir="rtl"', 'id="analyzeBtn"', 'id="results"', 'id="saveExperimentBtn"', 'id="historyList"', 'id="hookInput"', 'id="captionSuggestion"', 'id="hashtags"', 'id="timingOptions"'):
               assert token in html, token
-          for token in ('localStorage', 'textContent', 'STORAGE_KEY', 'MAX_HISTORY', 'navigator.clipboard'):
+          for token in ('localStorage', 'textContent', 'STORAGE_KEY', 'MAX_HISTORY', 'navigator.clipboard', 'sampleFrames', 'readOcr', 'visualObjects', 'inferTopic', 'topicTags'):
               assert token in js, token
           assert 'innerHTML' not in js
           assert 'fetch(' not in js
           assert 'XMLHttpRequest' not in js
+          assert 'makeTiming' not in js
+          assert '۱۹:۰۰–۲۱:۳۰' not in js
+          assert '۱۲:۳۰–۱۴:۰۰' not in js
           assert 'manifest.webmanifest' in html
           assert 'icon.svg' in manifest
           assert 'display' in manifest and 'standalone' in manifest
           assert len(Path('style.css').read_text(encoding='utf-8')) > 1000
-          print('ReelLab pre-publish hardening smoke test passed')
+          print('ReelLab content-intelligence hardening smoke test passed')
           PY
