@@ -34,6 +34,7 @@
         <label class="field"><span>نام آزمایش</span><input id="experimentName" type="text" maxlength="80" placeholder="مثلاً: تست قلاب A/B هفته اول"></label>
         <label class="field"><span>CTA / دعوت به اقدام</span><input id="cta" type="text" maxlength="160" placeholder="مثلاً: ذخیره کن، فالو کن، لینک بیو را ببین"></label>
         <label class="field wide"><span>قلاب فعلی (اختیاری)</span><input id="hookInput" type="text" maxlength="220" placeholder="متن ۱ تا ۳ ثانیه اول Reel را اینجا بنویس"></label>
+        <label class="field wide"><span>موضوع Reel / خلاصه کوتاه (اختیاری)</span><input id="reelTopic" type="text" maxlength="180" placeholder="مثلاً: تجربه من از خرید یک ماشین دست‌دوم؛ یا آموزش یک ترفند اکسل"></label>
         <label class="field wide"><span>متن کپشن</span><textarea id="caption" rows="4" maxlength="2200" placeholder="کپشن فعلی Reel را اینجا وارد کن..."></textarea></label>
       </div>
       <button id="analyzeBtn" class="primary" type="button">🚦 چکاپ قبل از انتشار</button><p id="status" class="status" role="status" aria-live="polite"></p>
@@ -42,9 +43,9 @@
       <div class="section-head"><div><p class="eyebrow">PRE-PUBLISH CHECK</p><h2>گزارش آماده‌سازی Reel</h2></div><button id="resetBtn" class="ghost" type="button">تحلیل جدید</button></div>
       <div class="instruction-strip"><b>حالا این کارها را انجام بده:</b><span>۱) 🔴ها را اصلاح کن</span><span>۲) یک قلاب انتخاب کن</span><span>۳) کپشن و هشتگ را کپی کن</span><span>۴) زمان آزمایشی را انتخاب کن</span><span>۵) Instagram را باز کن</span></div>
       <div id="summary" class="summary"></div><div id="metrics" class="metrics"></div><div id="findings" class="findings"></div>
-      <article class="tool-card hook-builder"><div><p class="eyebrow">HOOK BUILDER 🎣</p><h3>قلاب اول ویدیو</h3><p>قلاب یعنی همان جمله یا تصویر ۱ تا ۳ ثانیه اول؛ پیشنهاد جدید سایت اول از گفتار و متن واقعی Reel استفاده می‌کند.</p></div><div id="hooks" class="hooks"></div></article>
+      <article class="tool-card hook-builder"><div><p class="eyebrow">HOOK BUILDER 🎣</p><h3>قلاب اول ویدیو</h3><p>قلاب یعنی همان جمله یا تصویر ۱ تا ۳ ثانیه اول؛ پیشنهادها باید از سیگنال معتبر Reel ساخته شوند و تکراری نباشند.</p></div><div id="hooks" class="hooks"></div></article>
       <article class="tool-card rewrite-card"><div><p class="eyebrow">CAPTION REWRITER 📝</p><h3>کپشن پیشنهادی خودمونی</h3><p id="captionReason"></p></div><div id="captionSuggestion" class="copy-box"></div><button id="copyCaptionBtn" class="ghost copy-btn" type="button">📋 کپی کپشن پیشنهادی</button></article>
-      <article class="tool-card hashtag-card"><div><p class="eyebrow">HASHTAGS #️⃣</p><h3>هشتگ‌های مرتبط با موضوع</h3><p>هشتگ از موضوع و متن واقعی ویدیو ساخته می‌شود؛ اسم فایل و عددهای تصادفی وارد هشتگ نمی‌شوند.</p></div><div id="hashtags" class="hashtags"></div><button id="copyHashtagsBtn" class="ghost copy-btn" type="button">📋 کپی هشتگ‌ها</button></article>
+      <article class="tool-card hashtag-card"><div><p class="eyebrow">HASHTAGS #️⃣</p><h3>هشتگ‌های مرتبط با موضوع</h3><p>هشتگ فقط وقتی ساخته می‌شود که موضوع قابل اعتماد باشد؛ در غیر این صورت موتور حدس نمی‌زند.</p></div><div id="hashtags" class="hashtags"></div><button id="copyHashtagsBtn" class="ghost copy-btn" type="button">📋 کپی هشتگ‌ها</button></article>
       <article class="tool-card cta-card"><div><p class="eyebrow">CTA 👉</p><h3>دعوت به اقدام</h3><p id="ctaSuggestion"></p></div><button id="copyCtaBtn" class="ghost copy-btn" type="button">📋 کپی CTA</button></article>
       <article class="tool-card timing-card"><div><p class="eyebrow">PUBLISH WINDOW ⏰</p><h3>زمان پیشنهادی برای تست</h3><p id="timingText"></p></div><div id="timingOptions" class="timing-options"></div></article>
       <article class="experiment"><div><p class="eyebrow">NEXT EXPERIMENT</p><h3>آزمایش بعدی</h3><p id="experimentText"></p></div><div class="experiment-actions"><button id="saveExperimentBtn" class="primary small" type="button">ذخیره در آزمایش‌ها</button><button id="copyExperimentBtn" class="ghost" type="button">کپی برنامه آزمایش</button></div></article>
@@ -53,6 +54,6 @@
     </section>
     <section id="history" class="history" hidden><div class="section-head"><div><p class="eyebrow">EXPERIMENT LOG</p><h2>آزمایش‌های من</h2></div><button id="clearHistoryBtn" class="ghost" type="button">پاک کردن تاریخچه</button></div><p class="history-note">این تاریخچه فقط روی همین مرورگر ذخیره می‌شود؛ ویدیوها ذخیره نمی‌شوند.</p><div id="historyList" class="history-list"></div></section>
     <footer>ReelLab • Analyze → Hypothesis → Experiment → Publish → Measure → Learn</footer>
-  </main><script src="app.js" defer></script>
+  </main><script src="app.js" defer></script><script src="engine-v2.js" defer></script>
 </body>
 </html>
