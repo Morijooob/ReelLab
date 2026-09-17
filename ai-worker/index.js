@@ -4,8 +4,9 @@ const INTERACTIONS_URL='https://generativelanguage.googleapis.com/v1beta/interac
 const FILES_UPLOAD_URL='https://generativelanguage.googleapis.com/upload/v1beta/files';
 const FILES_API_URL='https://generativelanguage.googleapis.com/v1beta/files';
 const GEMINI_API_REVISION='2026-05-20';
-const FILE_PROCESSING_MAX_POLLS=48;
-const FILE_PROCESSING_POLL_MS=2500;
+// Keep polling safely below Cloudflare Workers Free's 50 external-subrequest limit.
+const FILE_PROCESSING_MAX_POLLS=30;
+const FILE_PROCESSING_POLL_MS=4000;
 
 const schema={type:'object',properties:{
  topic:{type:'string'},topic_confidence:{type:'string',enum:['low','medium','high']},topic_evidence:{type:'array',items:{type:'string'}},summary:{type:'string'},hook:{type:['string','null']},hook_start_seconds:{type:['number','null'],minimum:0},hook_end_seconds:{type:['number','null'],minimum:0},hook_confidence:{type:'string',enum:['none','low','medium','high']},speech:{type:'string'},speech_valid:{type:'boolean'},ocr:{type:'string'},ocr_valid:{type:'boolean'},visual_evidence:{type:'array',items:{type:'string'}},key_moments:{type:'array',items:{type:'object',properties:{start_seconds:{type:'number',minimum:0},end_seconds:{type:'number',minimum:0},description:{type:'string'},importance:{type:'string',enum:['low','medium','high']}},required:['start_seconds','end_seconds','description','importance']}},caption:{type:['string','null']},hashtags:{type:'array',items:{type:'string'}},cta:{type:['string','null']},readiness_score:{type:'integer',minimum:0,maximum:100},blocking_issues:{type:'array',items:{type:'string'}},warnings:{type:'array',items:{type:'string'}}},required:['topic','topic_confidence','topic_evidence','summary','hook','hook_start_seconds','hook_end_seconds','hook_confidence','speech','speech_valid','ocr','ocr_valid','visual_evidence','key_moments','caption','hashtags','cta','readiness_score','blocking_issues','warnings']};
