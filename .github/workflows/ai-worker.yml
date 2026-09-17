@@ -1,0 +1,19 @@
+name: AI Worker Syntax
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'ai-worker/**'
+      - '.github/workflows/ai-worker.yml'
+  workflow_dispatch:
+
+jobs:
+  syntax:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Check Worker JavaScript syntax
+        run: node --check ai-worker/index.js
+      - name: Check Wrangler config exists
+        run: test -s ai-worker/wrangler.jsonc
