@@ -66,13 +66,8 @@ function sanitizeModelResult(raw) {
   const blocking = Array.isArray(r.blocking_issues) ? r.blocking_issues.map(String).filter(Boolean).slice(0,8) : [];
   const warnings = Array.isArray(r.warnings) ? r.warnings.map(String).filter(Boolean).slice(0,8) : [];
 
-  // Semantic safety gate: model output must not promote weak evidence into a trusted hook/topic.
-  if (confidence !== 'high' || evidence.length < 2) {
-    blocking.push('موضوع با شواهد کافی تأیید نشد.');
-  }
-  if (hook && (hookConfidence === 'none' || hookConfidence === 'low')) {
-    blocking.push('قلاب شواهد زمانی/محتوایی کافی ندارد.');
-  }
+  if (confidence !== 'high' || evidence.length < 2) blocking.push('موضوع با شواهد کافی تأیید نشد.');
+  if (hook && (hookConfidence === 'none' || hookConfidence === 'low')) blocking.push('قلاب شواهد زمانی/محتوایی کافی ندارد.');
   if (!speech.trim()) warnings.push('گفتار معتبر برای تحلیل پیدا نشد.');
   if (!ocr.trim()) warnings.push('متن معتبر روی تصویر پیدا نشد.');
 
@@ -115,16 +110,18 @@ async function analyzeWithGemini(file, fields, env) {
   for (let i = 0; i < bytes.length; i += chunk) binary += String.fromCharCode(...bytes.subarray(i, Math.min(i + chunk, bytes.length)));
   const data = btoa(binary);
 
-  const prompt = `You are ReelLab's multimodal video analyst. Analyze the ENTIRE uploaded Reel using both audio and visual evidence.
+  const prompt = `You are ReelLab's multimodal video analyst. Analyze the ENTIRE uploaded Reel using both audio and visual evidence, with special attention to the first 3 seconds and meaningful scene changes.
 Rules:
-1) Never infer a topic from a single detected object such as person, bag, phone, etc.
-2) Never treat OCR garbage, random symbols, duplicated fragments, music markers, lyrics fragments, or low-confidence transcription as valid evidence.
-3) A hook is valid only when you can identify a concrete spoken/visible event or sentence in the first 3 seconds and give its time range.
-4) If evidence is insufficient, return null/low confidence. Do NOT guess.
+1) Inspect the whole timeline; do not decide the topic from one frame.
+2) Never infer a topic from a single detected object such as person, bag, phone, etc.
+3) Never treat OCR garbage, random symbols, duplicated fragments, music markers, lyrics fragments, or low-confidence transcription as valid evidence.
+4) A hook is valid only when you identify a concrete spoken/visible event or sentence in the first 3 seconds and give its time range.
 5) Topic confidence high requires at least TWO independent concrete evidence items from audio, readable on-screen text, or meaningful visual events.
-6) Caption and hashtags must be grounded only in a trusted topic. Otherwise return null/empty.
-7) readiness_score measures pre-publish evidence/quality, NOT predicted views.
-8) Return concise Persian where appropriate.
+6) If evidence is insufficient, return null/low confidence. Do NOT guess.
+7) Caption and hashtags must be grounded only in a trusted topic. Otherwise return null/empty.
+8) readiness_score measures pre-publish evidence/quality, NOT predicted views.
+9) Use timestamps for key moments and distinguish music/noise from meaningful speech.
+10) Return concise Persian where appropriate.
 User goal: ${fields.goal || 'reach'}
 User-provided topic (may be empty): ${fields.topic || ''}
 User hook (may be empty): ${fields.hook || ''}
@@ -134,7 +131,7 @@ User CTA (may be empty): ${fields.cta || ''}`;
   const body = {
     model: 'gemini-3.8-flash',
     input: [
-      { type: 'video', data, mime_type: file.type || 'video/mp4' },
+      { type: 'video', data, mime_type: file.type || 'video/mp4', processing: 'agentic' },
       { type: 'text', text: prompt }
     ],
     response_format: { type: 'text', mime_type: 'application/json', schema }
@@ -170,7 +167,7 @@ export default {
       const result = await analyzeWithGemini(file, {
         goal: form.get('goal'), topic: form.get('topic'), hook: form.get('hook'), caption: form.get('caption'), cta: form.get('cta')
       }, env);
-      return json({ ok: true, engine: 'multimodal-v1', result }, 200, origin);
+      return json({ ok: true, engine: 'multimodal-v2-agentic', result }, 200, origin);
     } catch (error) {
       const code = String(error?.message || 'AI_ERROR').split(':')[0];
       const status = code === 'VIDEO_TOO_LARGE_FOR_MVP' ? 413 : code === 'AI_BACKEND_NOT_CONFIGURED' ? 503 : 502;
