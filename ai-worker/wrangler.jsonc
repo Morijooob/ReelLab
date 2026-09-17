@@ -1,0 +1,10 @@
+{
+  "$schema": "https://developers.cloudflare.com/workers/wrangler/config-schema.json",
+  "name": "reellab-ai",
+  "main": "index.js",
+  "compatibility_date": "2026-09-17",
+  "workers_dev": true,
+  "secrets": {
+    "required": ["GEMINI_API_KEY"]
+  }
+}
