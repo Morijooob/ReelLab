@@ -1,7 +1,7 @@
 (()=>{
 'use strict';
 const ENDPOINT=(window.REELLAB_AI_ENDPOINT||'https://reellab-ai.m73216r.workers.dev').replace(/\/$/,'');
-const MAX_VIDEO_BYTES=12*1024*1024;
+const MAX_VIDEO_BYTES=14*1024*1024;
 const $=id=>document.getElementById(id), text=v=>String(v??'').trim();
 function setStatus(msg,tone=''){const el=$('status');if(el){el.textContent=msg;el.dataset.tone=tone}}
 function addFinding(title,body,kind='warn'){const f=$('findings');if(!f)return;const a=document.createElement('article');a.className=`finding ${kind}`;const b=document.createElement('b');b.textContent=title;const p=document.createElement('p');p.textContent=body;a.append(b,p);f.appendChild(a)}
@@ -30,7 +30,7 @@ function render(r){
 }
 async function analyze(file){
  if(!file){setStatus('⚠️ اول یک ویدیوی Reel انتخاب کن.','error');return false}
- if(file.size>MAX_VIDEO_BYTES){setStatus('⚠️ حجم ویدیو برای نسخه فعلی بیش از ۱۲ مگابایت است.','error');return false}
+ if(file.size>MAX_VIDEO_BYTES){setStatus('⚠️ حجم ویدیو برای نسخه فعلی بیش از ۱۴ مگابایت است.','error');return false}
  const fd=new FormData();fd.append('video',file,file.name||'reel.mp4');fd.append('goal',text($('goal')?.value));fd.append('topic',text($('reelTopic')?.value));fd.append('hook',text($('hookInput')?.value));fd.append('caption',text($('caption')?.value));fd.append('cta',text($('cta')?.value));
  setStatus('🧠 در حال تحلیل واقعی ویدیو با موتور چندوجهی…','');
  const ac=new AbortController();const timer=setTimeout(()=>ac.abort(),120000);
