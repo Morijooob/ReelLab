@@ -1,6 +1,7 @@
 const ALLOWED_ORIGIN = 'https://morijooob.github.io';
 const MAX_VIDEO_BYTES = 12 * 1024 * 1024;
 const GEMINI_URL = 'https://generativelanguage.googleapis.com/v1beta/interactions';
+const GEMINI_API_REVISION = '2026-05-20';
 
 const schema = {
   type: 'object',
@@ -47,8 +48,8 @@ const json = (data, status = 200, origin = ALLOWED_ORIGIN) => new Response(JSON.
   headers: {
     'content-type': 'application/json; charset=utf-8',
     'access-control-allow-origin': origin,
-    'access-control-allow-methods': 'POST, OPTIONS',
-    'access-control-allow-headers': 'content-type',
+    'access-control-allow-methods': 'GET, POST, OPTIONS',
+    'access-control-allow-headers': 'content-type, accept',
     'cache-control': 'no-store',
     'x-content-type-options': 'nosniff'
   }
@@ -110,7 +111,7 @@ async function analyzeWithGemini(file, fields, env) {
   for (let i = 0; i < bytes.length; i += chunk) binary += String.fromCharCode(...bytes.subarray(i, Math.min(i + chunk, bytes.length)));
   const data = btoa(binary);
 
-  const prompt = `You are ReelLab's multimodal video analyst. Analyze the ENTIRE uploaded Reel using both audio and visual evidence, with special attention to the first 3 seconds and meaningful scene changes.
+  const prompt = `You are ReelLab's multimodal video analyst. Analyze the ENTIRE uploaded Reel using both audio and visual evidence, with special attention to the first 3 seconds, transitions, and meaningful scene changes.
 Rules:
 1) Inspect the whole timeline; do not decide the topic from one frame.
 2) Never infer a topic from a single detected object such as person, bag, phone, etc.
@@ -121,7 +122,8 @@ Rules:
 7) Caption and hashtags must be grounded only in a trusted topic. Otherwise return null/empty.
 8) readiness_score measures pre-publish evidence/quality, NOT predicted views.
 9) Use timestamps for key moments and distinguish music/noise from meaningful speech.
-10) Return concise Persian where appropriate.
+10) Prefer concrete observations over generic creator advice.
+11) Return concise Persian where appropriate.
 User goal: ${fields.goal || 'reach'}
 User-provided topic (may be empty): ${fields.topic || ''}
 User hook (may be empty): ${fields.hook || ''}
@@ -131,15 +133,20 @@ User CTA (may be empty): ${fields.cta || ''}`;
   const body = {
     model: 'gemini-3.8-flash',
     input: [
-      { type: 'video', data, mime_type: file.type || 'video/mp4', processing: 'agentic' },
-      { type: 'text', text: prompt }
+      { type: 'text', text: prompt },
+      { type: 'video', data, mime_type: file.type || 'video/mp4' }
     ],
+    generation_config: { thinking_level: 'high', max_output_tokens: 6000 },
     response_format: { type: 'text', mime_type: 'application/json', schema }
   };
 
   const response = await fetch(GEMINI_URL, {
     method: 'POST',
-    headers: { 'content-type': 'application/json', 'x-goog-api-key': env.GEMINI_API_KEY },
+    headers: {
+      'content-type': 'application/json',
+      'x-goog-api-key': env.GEMINI_API_KEY,
+      'Api-Revision': GEMINI_API_REVISION
+    },
     body: JSON.stringify(body)
   });
   if (!response.ok) {
@@ -158,6 +165,7 @@ export default {
     const allowed = origin === ALLOWED_ORIGIN || origin === 'http://localhost:3000' || origin === 'http://localhost:5173';
     if (request.method === 'OPTIONS') return json({ ok: true }, 204, allowed ? origin : ALLOWED_ORIGIN);
     if (!allowed) return json({ error: 'ORIGIN_NOT_ALLOWED' }, 403);
+    if (request.method === 'GET') return json({ ok: true, service: 'reellab-ai', engine: 'gemini-3.8-flash', mode: 'multimodal-video' }, 200, origin || ALLOWED_ORIGIN);
     if (request.method !== 'POST') return json({ error: 'METHOD_NOT_ALLOWED' }, 405, origin);
     try {
       const form = await request.formData();
@@ -167,7 +175,7 @@ export default {
       const result = await analyzeWithGemini(file, {
         goal: form.get('goal'), topic: form.get('topic'), hook: form.get('hook'), caption: form.get('caption'), cta: form.get('cta')
       }, env);
-      return json({ ok: true, engine: 'multimodal-v2-agentic', result }, 200, origin);
+      return json({ ok: true, engine: 'multimodal-v3-gemini-3.8', result }, 200, origin);
     } catch (error) {
       const code = String(error?.message || 'AI_ERROR').split(':')[0];
       const status = code === 'VIDEO_TOO_LARGE_FOR_MVP' ? 413 : code === 'AI_BACKEND_NOT_CONFIGURED' ? 503 : 502;
