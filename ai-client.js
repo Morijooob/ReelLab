@@ -2,6 +2,7 @@
 'use strict';
 const ENDPOINT=(window.REELLAB_AI_ENDPOINT||'https://reellab-ai.m73216r.workers.dev').replace(/\/$/,'');
 const MAX_VIDEO_BYTES=14*1024*1024;
+const ANALYSIS_TIMEOUT_MS=300000;
 const $=id=>document.getElementById(id), text=v=>String(v??'').trim();
 function setStatus(msg,tone=''){const el=$('status');if(el){el.textContent=msg;el.dataset.tone=tone}}
 function addFinding(title,body,kind='warn'){const f=$('findings');if(!f)return;const a=document.createElement('article');a.className=`finding ${kind}`;const b=document.createElement('b');b.textContent=title;const p=document.createElement('p');p.textContent=body;a.append(b,p);f.appendChild(a)}
@@ -32,9 +33,9 @@ async function analyze(file){
  if(!file){setStatus('⚠️ اول یک ویدیوی Reel انتخاب کن.','error');return false}
  if(file.size>MAX_VIDEO_BYTES){setStatus('⚠️ حجم ویدیو برای نسخه فعلی بیش از ۱۴ مگابایت است.','error');return false}
  const fd=new FormData();fd.append('video',file,file.name||'reel.mp4');fd.append('goal',text($('goal')?.value));fd.append('topic',text($('reelTopic')?.value));fd.append('hook',text($('hookInput')?.value));fd.append('caption',text($('caption')?.value));fd.append('cta',text($('cta')?.value));
- setStatus('🧠 در حال تحلیل واقعی ویدیو با موتور چندوجهی…','');
- const ac=new AbortController();const timer=setTimeout(()=>ac.abort(),120000);
- try{const res=await fetch(ENDPOINT,{method:'POST',body:fd,signal:ac.signal,headers:{Accept:'application/json'}});const raw=await res.text();let data;try{data=JSON.parse(raw)}catch{throw new Error('AI_BAD_RESPONSE')};if(!res.ok)throw new Error(data.error||`AI_HTTP_${res.status}`);if(!data.result)throw new Error('AI_EMPTY_RESULT');render(data.result);setStatus('🟢 تحلیل چندوجهی واقعی انجام شد.','ok');window.dispatchEvent(new CustomEvent('reellab:ai-result',{detail:data.result}));return true}catch(e){const msg=e?.name==='AbortError'?'زمان تحلیل تمام شد.':e?.message||'اتصال به موتور هوشمند برقرار نشد.';setStatus(`⚠️ موتور هوشمند فعلاً در دسترس نیست: ${msg}`,'error');return false}finally{clearTimeout(timer)}}
+ setStatus('🧠 در حال تحلیل واقعی ویدیو با موتور چندوجهی… این مرحله ممکن است چند دقیقه طول بکشد.','');
+ const ac=new AbortController();const timer=setTimeout(()=>ac.abort(),ANALYSIS_TIMEOUT_MS);
+ try{const res=await fetch(ENDPOINT,{method:'POST',body:fd,signal:ac.signal,headers:{Accept:'application/json'}});const raw=await res.text();let data;try{data=JSON.parse(raw)}catch{throw new Error('AI_BAD_RESPONSE')};if(!res.ok)throw new Error(data.error||`AI_HTTP_${res.status}`);if(!data.result)throw new Error('AI_EMPTY_RESULT');render(data.result);setStatus('🟢 تحلیل چندوجهی واقعی انجام شد.','ok');window.dispatchEvent(new CustomEvent('reellab:ai-result',{detail:data.result}));return true}catch(e){const msg=e?.name==='AbortError'?'زمان تحلیل بیش از ۵ دقیقه شد.':e?.message||'اتصال به موتور هوشمند برقرار نشد.';setStatus(`⚠️ موتور هوشمند فعلاً در دسترس نیست: ${msg}`,'error');return false}finally{clearTimeout(timer)}}
 function boot(){const btn=$('analyzeBtn');if(!btn)return;btn.addEventListener('click',async ev=>{const file=$('videoInput')?.files?.[0];ev.preventDefault();ev.stopImmediatePropagation();btn.disabled=true;try{await analyze(file)}finally{btn.disabled=false}},true)}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
 })();
