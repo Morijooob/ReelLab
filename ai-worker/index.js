@@ -5,11 +5,10 @@ const GEMINI_API_REVISION = '2026-05-20';
 
 const schema = {
   type: 'object',
-  additionalProperties: false,
   properties: {
     topic: { type: 'string' },
     topic_confidence: { type: 'string', enum: ['low', 'medium', 'high'] },
-    topic_evidence: { type: 'array', items: { type: 'string' }, maxItems: 5 },
+    topic_evidence: { type: 'array', items: { type: 'string' } },
     summary: { type: 'string' },
     hook: { type: ['string', 'null'] },
     hook_start_seconds: { type: ['number', 'null'], minimum: 0 },
@@ -19,11 +18,11 @@ const schema = {
     speech_valid: { type: 'boolean' },
     ocr: { type: 'string' },
     ocr_valid: { type: 'boolean' },
-    visual_evidence: { type: 'array', items: { type: 'string' }, maxItems: 12 },
+    visual_evidence: { type: 'array', items: { type: 'string' } },
     key_moments: {
-      type: 'array', maxItems: 8,
+      type: 'array',
       items: {
-        type: 'object', additionalProperties: false,
+        type: 'object',
         properties: {
           start_seconds: { type: 'number', minimum: 0 },
           end_seconds: { type: 'number', minimum: 0 },
@@ -34,11 +33,11 @@ const schema = {
       }
     },
     caption: { type: ['string', 'null'] },
-    hashtags: { type: 'array', items: { type: 'string' }, maxItems: 8 },
+    hashtags: { type: 'array', items: { type: 'string' } },
     cta: { type: ['string', 'null'] },
     readiness_score: { type: 'integer', minimum: 0, maximum: 100 },
-    blocking_issues: { type: 'array', items: { type: 'string' }, maxItems: 8 },
-    warnings: { type: 'array', items: { type: 'string' }, maxItems: 8 }
+    blocking_issues: { type: 'array', items: { type: 'string' } },
+    warnings: { type: 'array', items: { type: 'string' } }
   },
   required: ['topic','topic_confidence','topic_evidence','summary','hook','hook_start_seconds','hook_end_seconds','hook_confidence','speech','speech_valid','ocr','ocr_valid','visual_evidence','key_moments','caption','hashtags','cta','readiness_score','blocking_issues','warnings']
 };
