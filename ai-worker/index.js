@@ -1,5 +1,5 @@
 const ALLOWED_ORIGIN = 'https://morijooob.github.io';
-const MAX_VIDEO_BYTES = 12 * 1024 * 1024;
+const MAX_VIDEO_BYTES = 14 * 1024 * 1024;
 const GEMINI_URL = 'https://generativelanguage.googleapis.com/v1beta/interactions';
 const GEMINI_API_REVISION = '2026-05-20';
 
