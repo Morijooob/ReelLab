@@ -43,7 +43,7 @@ jobs:
               assert token in html, token
           for token in ('localStorage', 'textContent', 'STORAGE_KEY', 'MAX_HISTORY', 'navigator.clipboard', 'sampleFrames', 'readOcr', 'visualObjects', 'inferTopic', 'topicTags'):
               assert token in js, token
-          for token in ('cleanSpeech', 'cleanOcr', 'detect', 'score', 'موضوع نامشخص', 'MutationObserver', 'reelTopic'):
+          for token in ('cleanSpeech', 'cleanOcr', 'detect', 'score', 'UNKNOWN', 'موضوع دقیق تشخیص داده نشد', 'MutationObserver', 'reelTopic'):
               assert token in v2, token
           for token in ('frameStats', 'brightness', 'contrast', 'motion', 'REAL REEL AUDIT', 'MutationObserver'):
               assert token in v3, token
