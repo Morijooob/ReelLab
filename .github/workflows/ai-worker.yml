@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - 'ai-worker/**'
+      - 'ai-client.js'
       - '.github/workflows/ai-worker.yml'
   workflow_dispatch:
 
@@ -15,5 +16,7 @@ jobs:
       - uses: actions/checkout@v6
       - name: Check Worker JavaScript syntax
         run: node --check ai-worker/index.js
+      - name: Check AI client JavaScript syntax
+        run: node --check ai-client.js
       - name: Check Wrangler config exists
         run: test -s ai-worker/wrangler.jsonc
